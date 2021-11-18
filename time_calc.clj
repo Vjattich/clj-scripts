@@ -10,8 +10,6 @@
 
 (defn- parse-arg [arg]
   (cond
-    (= "-" arg) :-
-    (= "+" arg) :+
     (= "now" arg) (LocalDateTime/now)
     (hh:mm? arg) (LocalTime/parse arg)
     (dd:mm:yy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
