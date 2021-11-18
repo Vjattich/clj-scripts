@@ -1,4 +1,4 @@
-(ns time-calc.time-calc
+(ns time-calc
   (:import (java.time.format DateTimeFormatter)
            (java.time LocalDate LocalTime LocalDateTime Duration Period)))
 
