@@ -8,11 +8,16 @@
 (defn dd:mm:yy? [string]
   (some? (re-matches #"^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})\s*$" string)))
 
+(defn dd:mm:yy_hh:mm? [string]
+  (some? (re-matches #"^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\s*$" string)))
+
 (defn- parse-arg [arg]
   (cond
     (= "now" arg) (LocalDateTime/now)
     (hh:mm? arg) (LocalTime/parse arg)
     (dd:mm:yy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
+    ;todo need auto time resolve
+    (dd:mm:yy_hh:mm? arg) (LocalDateTime/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy_HH:mm"))
     :default (Long/parseLong arg)))
 
 (defn- resolve-operand [operand args]
