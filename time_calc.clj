@@ -19,6 +19,7 @@
   (cond
     (every? (fn [x] (instance? LocalTime x)) args) (cond
                                                      (= "-" operand) :time-minus)
+
     (and
       (some (fn [x] (instance? LocalTime x)) args)
       (some (fn [x] (instance? Long x)) args)) (cond
@@ -29,6 +30,7 @@
       (every? (fn [x] (instance? LocalDate x)) args)
       (every? (fn [x] (instance? LocalDateTime x)) args)) (cond
                                                             (= "-" operand) :minus-local-date-time)
+
     (or
       (and
         (some (fn [x] (instance? LocalDate x)) args)
@@ -67,18 +69,22 @@
   (println args)
   (apply ({:time-minus            (fn [second-arg first-arg]
                                     (format-period (Duration/between second-arg first-arg)))
-           :minus-time-long       (fn [second-arg first-arg]
+           :minus-time-long       (fn [f s]
                                     ;todo units
-                                    (.toString (.minusHours first-arg second-arg)))
-           :plus-time-long        (fn [second-arg first-arg]
+                                    (-> (DateTimeFormatter/ofPattern "HH:mm")
+                                        (.format (.minusHours s f))))
+           :plus-time-long        (fn [f s]
                                     ;todo units
-                                    (.toString (.plusHours first-arg second-arg)))
-           :minus-local-date-time (fn [second-arg first-arg]
-                                    (format-period (Period/between (.toLocalDate second-arg) (.toLocalDate first-arg))
-                                                   (Duration/between second-arg first-arg)))
-           :minus-local-date-long (fn [second-arg first-arg]
+                                    (-> (DateTimeFormatter/ofPattern "HH:mm")
+                                        (.format (.plusHours s f))))
+           :minus-local-date-time (fn [f s]
+                                    (format-period (Period/between (.toLocalDate f) (.toLocalDate s))
+                                                   (Duration/between f s)))
+           :minus-local-date-long (fn [f s]
                                     ;todo units
-                                    (.toString (.minusDays first-arg second-arg)))
-           :plus-local-date-long  (fn [second-arg first-arg]
+                                    (-> (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm")
+                                        (.format (.minusDays s f))))
+           :plus-local-date-long  (fn [f s]
                                     ;todo units
-                                    (.toString (.plusDays first-arg second-arg)))} (first args)) (rest args)))
+                                    (-> (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm")
+                                        (.format (.plusDays s f))))} (first args)) (rest args)))
