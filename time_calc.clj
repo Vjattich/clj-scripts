@@ -3,22 +3,22 @@
            (java.time LocalDate LocalTime LocalDateTime Duration Period)
            (java.util.regex Pattern)))
 
-(defn- hh:mm? [string]
+(defn- HH:mm? [string]
   (Pattern/matches "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" string))
 
-(defn- dd:mm:yy? [string]
+(defn- dd.MM.yyyy? [string]
   (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})\\s*$" string))
 
-(defn- dd:mm:yy_hh:mm? [string]
+(defn- dd.MM.yyyy_HH:mm? [string]
   (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\\s*$" string))
 
 (defn- parse-arg [arg]
   (cond
     (= "now" arg) (LocalDateTime/now)
-    (hh:mm? arg) (LocalTime/parse arg)
-    (dd:mm:yy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
+    (HH:mm? arg) (LocalTime/parse arg)
+    (dd.MM.yyyy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
     ;todo need auto time resolve
-    (dd:mm:yy_hh:mm? arg) (LocalDateTime/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy_HH:mm"))
+    (dd.MM.yyyy_HH:mm? arg) (LocalDateTime/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy_HH:mm"))
     :default (Long/parseLong arg)))
 
 (defn- resolve-operand [operand args]
