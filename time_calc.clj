@@ -1,15 +1,16 @@
 (ns time-calc
   (:import (java.time.format DateTimeFormatter)
-           (java.time LocalDate LocalTime LocalDateTime Duration Period)))
+           (java.time LocalDate LocalTime LocalDateTime Duration Period)
+           (java.util.regex Pattern)))
 
-(defn hh:mm? [arg]
-  (some? (re-matches #"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" arg)))
+(defn- hh:mm? [string]
+  (Pattern/matches "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" string))
 
-(defn dd:mm:yy? [string]
-  (some? (re-matches #"^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})\s*$" string)))
+(defn- dd:mm:yy? [string]
+  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})\\s*$" string))
 
-(defn dd:mm:yy_hh:mm? [string]
-  (some? (re-matches #"^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\s*$" string)))
+(defn- dd:mm:yy_hh:mm? [string]
+  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\\s*$" string))
 
 (defn- parse-arg [arg]
   (cond
@@ -71,7 +72,6 @@
                        (format "%02d %02d %02d %d:%02d:%02d" yy mm dd hh min sec))))
 
 (let [args (parse-command-line *command-line-args*)]
-  (println args)
   (apply ({:time-minus            (fn [second-arg first-arg]
                                     (format-period (Duration/between second-arg first-arg)))
            :minus-time-long       (fn [f s]
