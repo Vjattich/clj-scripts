@@ -1,7 +1,9 @@
 (ns time-calc
   (:import (java.time.format DateTimeFormatter)
            (java.time LocalDate LocalTime LocalDateTime Duration Period)
-           (java.util.regex Pattern)))
+           (java.util.regex Pattern)
+           (clojure.lang LazySeq)
+           (java.time.temporal ChronoUnit)))
 
 (defn- HH:mm? [string]
   (Pattern/matches "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" string))
@@ -12,14 +14,22 @@
 (defn- dd.MM.yyyy_HH:mm? [string]
   (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\\s*$" string))
 
+(defn- unit? [string]
+  (some? (re-seq #"(\d+)([smhdMy])" string)))
+
 (defn- parse-arg [arg]
   (cond
     (= "now" arg) (LocalDateTime/now)
     (HH:mm? arg) (LocalTime/parse arg)
     (dd.MM.yyyy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
-    ;todo need auto time resolve
     (dd.MM.yyyy_HH:mm? arg) (LocalDateTime/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy_HH:mm"))
-    :default (Long/parseLong arg)))
+    (unit? arg) (as-> arg data
+                      (re-seq #"(\d+)([smhdMy])" data)
+                      (map rest data)
+                      (map (partial map (fn [x] (let [num (re-find #"\d+" x)]
+                                                  (if (nil? num)
+                                                    x
+                                                    (Long/parseLong x))))) data))))
 
 (defn- resolve-operand [operand args]
   (cond
@@ -28,9 +38,9 @@
 
     (and
       (some (fn [x] (instance? LocalTime x)) args)
-      (some (fn [x] (instance? Long x)) args)) (cond
-                                                 (= "-" operand) :minus-time-long
-                                                 (= "+" operand) :plus-time-long)
+      (some (fn [x] (instance? LazySeq x)) args)) (cond
+                                                    (= "-" operand) :minus-time-unit
+                                                    (= "+" operand) :plus-time-unit)
 
     (or
       (every? (fn [x] (instance? LocalDate x)) args)
@@ -40,12 +50,12 @@
     (or
       (and
         (some (fn [x] (instance? LocalDate x)) args)
-        (some (fn [x] (instance? Long x)) args))
+        (some (fn [x] (instance? LazySeq x)) args))
       (and
         (some (fn [x] (instance? LocalDateTime x)) args)
-        (some (fn [x] (instance? Long x)) args))) (cond
-                                                    (= "-" operand) :minus-local-date-long
-                                                    (= "+" operand) :plus-local-date-long)))
+        (some (fn [x] (instance? LazySeq x)) args))) (cond
+                                                       (= "-" operand) :minus-local-date-unit
+                                                       (= "+" operand) :plus-local-date-unit)))
 
 (defn- parse-args [args]
   (loop [args args
@@ -72,24 +82,39 @@
                        (format "%02d %02d %02d %d:%02d:%02d" yy mm dd hh min sec))))
 
 (let [args (parse-command-line *command-line-args*)]
+  ;add to format-period func
   (apply ({:time-minus            (fn [second-arg first-arg]
                                     (format-period (Duration/between second-arg first-arg)))
-           :minus-time-long       (fn [f s]
-                                    ;todo units
+           :minus-time-unit       (fn [f s]
                                     (-> (DateTimeFormatter/ofPattern "HH:mm")
-                                        (.format (.minusHours s f))))
-           :plus-time-long        (fn [f s]
-                                    ;todo units
+                                        (.format (reduce (fn [date [val unit]]
+                                                           (.minus date val ({"s" ChronoUnit/SECONDS
+                                                                              "m" ChronoUnit/MINUTES
+                                                                              "h" ChronoUnit/HOURS} unit))) s f))))
+           :plus-time-unit        (fn [f s]
                                     (-> (DateTimeFormatter/ofPattern "HH:mm")
-                                        (.format (.plusHours s f))))
+                                        (.format (reduce (fn [date [val unit]]
+                                                           (.plus date val ({"s" ChronoUnit/SECONDS
+                                                                             "m" ChronoUnit/MINUTES
+                                                                             "h" ChronoUnit/HOURS} unit))) s f))))
            :minus-local-date-time (fn [f s]
-                                    (format-period (Period/between (.toLocalDate f) (.toLocalDate s))
+                                    (format-period (Period/between ^LocalDate (.toLocalDate f) ^LocalDate (.toLocalDate s))
                                                    (Duration/between f s)))
-           :minus-local-date-long (fn [f s]
-                                    ;todo units
+           :minus-local-date-unit (fn [f s]
                                     (-> (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm")
-                                        (.format (.minusDays s f))))
-           :plus-local-date-long  (fn [f s]
-                                    ;todo units
+                                        (.format (reduce (fn [date [val unit]]
+                                                           (.minus date val ({"s" ChronoUnit/SECONDS
+                                                                              "m" ChronoUnit/MINUTES
+                                                                              "h" ChronoUnit/HOURS
+                                                                              "d" ChronoUnit/DAYS
+                                                                              "M" ChronoUnit/MONTHS
+                                                                              "y" ChronoUnit/YEARS} unit))) s f))))
+           :plus-local-date-unit  (fn [f s]
                                     (-> (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm")
-                                        (.format (.plusDays s f))))} (first args)) (rest args)))
+                                        (.format (reduce (fn [date [val unit]]
+                                                           (.plus date val ({"s" ChronoUnit/SECONDS
+                                                                             "m" ChronoUnit/MINUTES
+                                                                             "h" ChronoUnit/HOURS
+                                                                             "d" ChronoUnit/DAYS
+                                                                             "M" ChronoUnit/MONTHS
+                                                                             "y" ChronoUnit/YEARS} unit))) s f))))} (first args)) (rest args)))
