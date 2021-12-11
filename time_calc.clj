@@ -82,7 +82,6 @@
                        (format "%02d %02d %02d %d:%02d:%02d" yy mm dd hh min sec))))
 
 (let [args (parse-command-line *command-line-args*)]
-  ;add to format-period func
   (apply ({:time-minus            (fn [second-arg first-arg]
                                     (format-period (Duration/between second-arg first-arg)))
            :minus-time-unit       (fn [f s]
