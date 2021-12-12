@@ -1,3 +1,5 @@
+; bb .\fast_namespace.clj -d C:\Users\.projects\quests -s quests.hacker_rank -n asd_asd
+
 (ns fast-namespace
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as s])

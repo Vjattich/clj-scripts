@@ -1,3 +1,5 @@
+; bb .\bux_entrance.clj -d 10 -p "vj; 5; 2021-09-25" -p "other; 0; 2021-09-25"
+
 (ns bux-entrance
   (:require [cheshire.core :as json]
             [clojure.string :as st]

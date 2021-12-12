@@ -1,3 +1,10 @@
+; bb time_calc.clj + now 1y2m
+; bb time_calc.clj - now 1y2m
+; bb time_calc.clj + 16:40 1h2m
+; bb time_calc.clj - 16:40 1h2m
+; bb time_calc.clj - 16:40 15:40
+; bb time_calc.clj - now 22.11.1996
+
 (ns time-calc
   (:import (java.time.format DateTimeFormatter)
            (java.time LocalDate LocalTime LocalDateTime Duration Period)
