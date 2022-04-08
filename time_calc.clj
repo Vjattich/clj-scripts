@@ -4,6 +4,7 @@
 ; bb time_calc.clj - 16:40 1h2m
 ; bb time_calc.clj - 16:40 15:40
 ; bb time_calc.clj - now 22.11.1996
+; bb time_calc.clj - now 03.09.1783
 
 (ns time-calc
   (:import (java.time.format DateTimeFormatter)
@@ -16,10 +17,10 @@
   (Pattern/matches "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" string))
 
 (defn- dd.MM.yyyy? [string]
-  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})\\s*$" string))
+  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:[1-9][1-9]))\\d{2}\\s*$" string))
 
 (defn- dd.MM.yyyy_HH:mm? [string]
-  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:19|20)\\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\\s*$" string))
+  (Pattern/matches "^\\s*(3[01]|[12][0-9]|0?[1-9])\\.(1[012]|0?[1-9])\\.((?:[1-9][1-9])\\d{2})_[012]{0,1}[0-9]:[0-6][0-9]\\s*$" string))
 
 (defn- unit? [string]
   (some? (re-seq #"(\d+)([smhdMy])" string)))
