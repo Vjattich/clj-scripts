@@ -31,6 +31,7 @@
 (defn- parse-arg [arg]
   (cond
     (= "now" arg) (LocalDateTime/now)
+    (= "today" arg) (.atStartOfDay (LocalDate/now))
     (HH:mm? arg) (LocalTime/parse arg)
     (dd.MM.yyyy? arg) (.atStartOfDay (LocalDate/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
     (dd.MM.yyyy_HH:mm? arg) (LocalDateTime/parse arg (DateTimeFormatter/ofPattern "dd.MM.yyyy_HH:mm"))
@@ -103,25 +104,31 @@
     "M" ChronoUnit/MONTHS
     "y" ChronoUnit/YEARS} unit))
 
-(let [args (parse-command-line *command-line-args*)]
-  (apply ({:time-minus            (fn [^LocalTime f ^LocalTime s]
-                                    (format-period (Duration/between f s)))
+(def func-map
+																			{:time-minus   (fn [^LocalTime f ^LocalTime s]
+                                      (format-period (Duration/between f s)))
+  
+             							:minus-time-unit       (fn [^LazySeq f ^LocalTime s]
+                                      (format-date-time "HH:mm" (reduce (fn [date [val unit]]
+                                                                          (.minus date val (units unit))) s f)))
+  
+							             :plus-time-unit        (fn [^LazySeq f ^LocalTime s]
+                                      (format-date-time "HH:mm" (reduce (fn [date [val unit]]
+                                                                          (.plus date val (units unit))) s f)))
+  
+       							      :minus-local-date-time (fn [^LocalDateTime f ^LocalDateTime s]
+                                      (format-period (Period/between (.toLocalDate f) (.toLocalDate s)) (Duration/between f s)))
+  
+            							 :minus-local-date-unit (fn [^LazySeq f ^LocalDateTime s]
+                                      (format-date-time "dd.MM.yyyy HH:mm" (reduce (fn [date [val unit]]
+                                                                                     (.minus date val (units unit))) s f)))
+  
+             							:plus-local-date-unit  (fn [^LazySeq f ^LocalDateTime s]
+                                      (format-date-time "dd.MM.yyyy HH:mm" (reduce (fn [date [val unit]]
+                                                                                     (.plus date val (units unit))) s f)))})
 
-           :minus-time-unit       (fn [^LazySeq f ^LocalTime s]
-                                    (format-date-time "HH:mm" (reduce (fn [date [val unit]]
-                                                                        (.minus date val (units unit))) s f)))
 
-           :plus-time-unit        (fn [^LazySeq f ^LocalTime s]
-                                    (format-date-time "HH:mm" (reduce (fn [date [val unit]]
-                                                                        (.plus date val (units unit))) s f)))
-
-           :minus-local-date-time (fn [^LocalDateTime f ^LocalDateTime s]
-                                    (format-period (Period/between (.toLocalDate f) (.toLocalDate s)) (Duration/between f s)))
-
-           :minus-local-date-unit (fn [^LazySeq f ^LocalDateTime s]
-                                    (format-date-time "dd.MM.yyyy HH:mm" (reduce (fn [date [val unit]]
-                                                                                   (.minus date val (units unit))) s f)))
-
-           :plus-local-date-unit  (fn [^LazySeq f ^LocalDateTime s]
-                                    (format-date-time "dd.MM.yyyy HH:mm" (reduce (fn [date [val unit]]
-                                                                                   (.plus date val (units unit))) s f)))} (first args)) (rest args)))
+(let [args (parse-command-line *command-line-args*)
+						operand-key (first args)
+						arguments (rest args)]
+  (println (apply (operand-key func-map) arguments)))
