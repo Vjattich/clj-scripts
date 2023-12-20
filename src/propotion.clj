@@ -8,7 +8,6 @@
 	(first (keep-indexed #(if (= "x" %2) %1) arg)))
 
 (defn- calc [a b c]
-	(println a b c)
 	(/ (* (load-string a) (load-string b)) (load-string c)))
 
 (let [equations (remove #(= %1 "=") *command-line-args*)
